@@ -3,6 +3,15 @@
 ## Usage
 
 ```
+git-map: Slice through time, collecting results of command on file
+git-map [<option>...] <file-to-slice-through> <command-to-run> [<command-arg>...]
+
+Options:
+  (--format|-f) <format-string>     git log format string with placeholder `{}` for
+                                    command output
+```
+
+```
 # Example for tracking change of certain metric (in a notebook) over time
 git map -f "%cI,{}" ./metric.ipynb ./calculate-metric wer
 

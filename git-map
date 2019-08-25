@@ -1,0 +1,61 @@
+#!/usr/bin/env fish
+
+function map -a "format_str" "file" "command"
+    set -l command_args $argv[4..-1]
+    set -l revs (git log "--pretty=format:%H" $file)
+
+    set -l i 1
+    for line in (git log "--pretty=format:$format_str" $file)
+        set -l output (git show $revs[$i]:$file | eval $command $command_args)
+        if test $status -eq 0 -a $output
+            echo -e (string replace "{}" $output $line)
+        end
+        set i (math $i + 1)
+    end
+end
+
+function usage
+    echo "git-map: Slice through time, collecting results of command on file"
+    echo "git-map [<option>...] <file-to-slice-through> <command-to-run> [<command-arg>...]"
+    echo
+    echo "Options:"
+    echo "  (--format|-f) <format-string>     git log format string with placeholder `{}` for"
+    echo "                                    command output"
+end
+
+# TODO: Use the standard way of handling args
+function main_args_i
+    set -l skip_next "false"
+    for i in (seq 1 (count $argv))
+        if test $skip_next = "true"
+            set skip_next "false"
+        else
+            if string match -q -- "-*" $argv[$i]
+                set skip_next "true"
+            else
+                echo $i
+                return
+            end
+        end
+    end
+end
+
+# TODO: We don't support = right now
+function git_map_format
+    for i in (seq 1 (count $argv))
+        switch $argv[$i]
+            case -f --format
+                echo $argv[(math $i + 1)]
+                return
+        end
+    end
+
+    echo "::%H|%cI\n{}"
+end
+
+if test (count $argv) -lt 2
+    usage
+    exit 1
+else
+    map (git_map_format $argv) $argv[(main_args_i $argv)..-1]
+end

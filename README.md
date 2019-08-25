@@ -1,5 +1,7 @@
 # git-map
 
+Git plugin for slicing through time and collecting command results.
+
 ## Usage
 
 ```

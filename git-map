@@ -1,5 +1,7 @@
 #!/usr/bin/env fish
 
+set _version "v0.1.1"
+
 function map -a "format_str" "file" "command"
     set -l command_args $argv[4..-1]
     set -l revs (git log "--pretty=format:%H" $file)
@@ -21,41 +23,48 @@ function usage
     echo "Options:"
     echo "  (--format|-f) <format-string>     git log format string with placeholder `{}` for"
     echo "                                    command output"
+    echo "  (--version|-v)                    print version information"
+    echo "  (--help|-h)                       print this help message"
 end
 
-# TODO: Use the standard way of handling args
-function main_args_i
-    set -l skip_next "false"
-    for i in (seq 1 (count $argv))
-        if test $skip_next = "true"
-            set skip_next "false"
+function validate_args -a "file" "command"
+    if test -e $file
+        if type -q $command
         else
-            if string match -q -- "-*" $argv[$i]
-                set skip_next "true"
-            else
-                echo $i
-                return
-            end
+            echo "'$command' cannot be executed"
+            return 1
         end
+    else
+        echo "file '$file' not found"
+        return 1
     end
 end
 
-# TODO: We don't support = right now
-function git_map_format
-    for i in (seq 1 (count $argv))
-        switch $argv[$i]
-            case -f --format
-                echo $argv[(math $i + 1)]
-                return
-        end
-    end
+argparse -n git-map -x h,v,f "h/help" "v/version" "f/format=" -- $argv
 
-    echo "::%H|%cI\n{}"
-end
-
-if test (count $argv) -lt 2
-    usage
+if test ! $status -eq 0
     exit 1
+end
+
+if set -q _flag_h
+    usage
+else if set -q _flag_v
+    echo "git-map "$_version
 else
-    map (git_map_format $argv) $argv[(main_args_i $argv)..-1]
+    if test (count $argv) -lt 2
+        usage
+        exit 1
+    else
+        if set -q _flag_f
+            set format_str $_flag_f
+        else
+            set format_str "::%H|%cI\n{}"
+        end
+
+        if validate_args $argv
+            map $format_str $argv
+        else
+            exit 1
+        end
+    end
 end

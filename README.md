@@ -11,6 +11,8 @@ git-map [<option>...] <file-to-slice-through> <command-to-run> [<command-arg>...
 Options:
   (--format|-f) <format-string>     git log format string with placeholder `{}` for
                                     command output
+  (--version|-v)                    print version information
+  (--help|-h)                       print this help message
 ```
 
 ```
